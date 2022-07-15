@@ -1,77 +1,107 @@
-// defined in library
-pub trait CxxQtRustObj {
-    type FFIRef;
-    type FFI;
-}
+use std::pin::Pin;
 
-pub mod qt {
-    use std::ops::Deref;
-    use std::ops::DerefMut;
+// generated
+#[cxx::bridge]
+mod ffi {
+    extern "Rust" {
+        #[cxx_name="MyObjectRust"]
+        type MyObject;
 
-    // defined in library
-    pub struct Qt<T>
-    where
-        T: super::CxxQtRustObj,
-    {
-        rust: T,
-        cpp: T::FFIRef,
+        fn get_prop(self: &MyObject) -> i32;
+        fn set_prop(cpp: Pin<&mut MyObjectQt>, value: i32);
+        fn create_rs() -> Box<MyObject>;
+
+        // Rust::MyObject::add(this);
+        fn add(cpp: Pin<&mut MyObjectQt>);
+        // this would be better but unfortunately isn't available in CXX:
+        // fn add(self: Pin<&mut MyObjectQt>);
     }
 
-    impl<T> Qt<T>
-    where
-        T: super::CxxQtRustObj,
-    {
-        pub fn new(rust: T, cpp: T::FFIRef) -> Self {
-            Self { rust, cpp }
-        }
+    unsafe extern "C++" {
+        include!("myobject.h");
+
+        #[cxx_name = "MyObject"]
+        type MyObjectQt;
+
+        fn rust(self: &MyObjectQt) -> &MyObject;
+        #[cxx_name = "propChanged"]
+        fn prop_changed(self: Pin<&mut MyObjectQt>);
+        //fn my_thing(self: &MyObjectCpp) -> bool;
     }
 
-    impl<T> Qt<T>
-    where
-        T: super::CxxQtRustObj,
-    {
-        pub fn cpp(self) -> T::FFIRef {
-            self.cpp
-        }
+    impl MyObject {
 
-        pub fn rust(self) -> T {
-            self.rust
-        }
     }
 
-    use std::borrow::BorrowMut;
-    impl<'a, T> Qt<&'a mut T>
-    where
-        &'a mut T: super::CxxQtRustObj,
-        <&'a mut T as super::CxxQtRustObj>::FFIRef:
-            BorrowMut<<&'a mut T as super::CxxQtRustObj>::FFI>,
-    {
-        pub unsafe fn rust_mut(&mut self) -> &mut T {
-            self.rust
-        }
-
-        pub unsafe fn cpp_mut(&mut self) -> &mut <&'a mut T as super::CxxQtRustObj>::FFI {
-            self.cpp.borrow_mut()
-        }
-    }
-
-    impl<T> Clone for Qt<T>
-    where
-        T: super::CxxQtRustObj + Clone,
-        <T as super::CxxQtRustObj>::FFIRef: Clone,
-    {
-        fn clone(&self) -> Self {
-            Self {
-                rust: self.rust.clone(),
-                cpp: self.cpp.clone(),
-            }
-        }
-    }
-
-    impl<T> Copy for Qt<T>
-    where
-        T: super::CxxQtRustObj + Copy,
-        <T as super::CxxQtRustObj>::FFIRef: Copy,
-    {
+    extern "C++" {
+        unsafe fn rust_mut(self: Pin<&mut MyObjectQt>) -> Pin<&mut MyObject>;
     }
 }
+
+/* Better scoping:
+mod cxxqt {
+    #[cxx::bridge(namespace = "myobject::internals")]
+    mod ffi {
+        extern "Rust" {
+            fn add(cpp: Pin<&mut MyObjectQt>);
+        }
+
+        unsafe extern "C++" {
+            type MyObjectQt = super::super::ffi::MyObjectQt;
+        }
+    }
+
+    fn add() {
+    }
+}
+*/
+
+impl ffi::MyObjectQt {
+    pub fn set_prop(mut self: Pin<&mut Self>, value: i32) {
+        unsafe {
+            self.as_mut().rust_mut().prop = value;
+        }
+        self.as_mut().prop_changed();
+    }
+
+    pub fn get_prop(self: &Self) -> i32 {
+        self.rust().prop
+    }
+
+    pub fn add(mut self: Pin<&mut Self>) {
+        let prop = self.as_ref().get_prop();
+        self.as_mut().set_prop(prop + 1);
+    }
+
+    // fn private_stuff(self: Pin<&mut Self>) -> &MyCustomRustType {
+    //     unsafe { self.get_mut(). }
+    // }
+}
+
+pub fn create_rs() -> Box<MyObject> {
+    Box::new(MyObject { prop: 42 })
+}
+
+pub fn set_prop(cpp: Pin<&mut ffi::MyObjectQt>, value: i32) {
+    cpp.set_prop(value);
+}
+
+// this can work as our wrapper function, if necessary
+pub fn add(cpp: Pin<&mut ffi::MyObjectQt>) {
+    cpp.add();
+}
+
+//pub fn my_invokable(...) -> UniquePtr<QColor>
+
+pub struct MyObject {
+    prop: i32,
+}
+
+impl MyObject {
+    fn get_prop(self: &MyObject) -> i32 {
+        self.prop
+    }
+}
+
+// fn main() {
+// }

@@ -7,3 +7,10 @@ edition = "2021"
 
 [dependencies]
 cxx="1.0"
+
+[lib]
+name = "rust"
+crate-type = ["staticlib"]
+
+[build-dependencies]
+cxx-qt-build = "0.3"
