@@ -1,11 +1,8 @@
-use std::pin::Pin;
-
-// generated
 #[cxx::bridge]
-mod ffi {
+pub mod ffi {
     extern "Rust" {
         #[cxx_name="MyObjectRust"]
-        type MyObject;
+        pub type MyObject;
 
         fn get_prop(self: &MyObject) -> i32;
         fn set_prop(cpp: Pin<&mut MyObjectQt>, value: i32);
@@ -29,17 +26,45 @@ mod ffi {
         //fn my_thing(self: &MyObjectCpp) -> bool;
     }
 
-    impl MyObject {
-
-    }
-
     extern "C++" {
         unsafe fn rust_mut(self: Pin<&mut MyObjectQt>) -> Pin<&mut MyObject>;
     }
 }
 
-/* Better scoping:
-mod cxxqt {
+/* Better scoping:*/
+pub use self::cxx_qt_ffi::*;
+mod cxx_qt_ffi {
+    use super::ffi::*;
+    use std::pin::Pin;
+
+    pub struct MyObject {
+        pub prop: i32,
+    }
+    
+    impl MyObject {
+        pub fn get_prop(self: &MyObject) -> i32 {
+            self.prop
+        }
+    }
+
+    impl MyObjectQt {
+        pub fn set_prop(mut self: Pin<&mut Self>, value: i32) {
+            unsafe {
+                self.as_mut().rust_mut().prop = value;
+            }
+            self.as_mut().prop_changed();
+        }
+    
+        pub fn get_prop(self: &Self) -> i32 {
+            self.rust().prop
+        }
+    
+        pub fn add(mut self: Pin<&mut Self>) {
+            let prop = self.as_ref().get_prop();
+            self.as_mut().set_prop(prop + 1);
+        }
+    }
+
     #[cxx::bridge(namespace = "myobject::internals")]
     mod ffi {
         extern "Rust" {
@@ -47,15 +72,28 @@ mod cxxqt {
         }
 
         unsafe extern "C++" {
+            #[namespace = ""]
+            #[cxx_name = "MyObject"]
             type MyObjectQt = super::super::ffi::MyObjectQt;
         }
     }
 
-    fn add() {
+    pub fn create_rs() -> Box<MyObject> {
+        Box::new(MyObject { prop: 42 })
     }
+    
+    pub fn set_prop(cpp: Pin<&mut ffi::MyObjectQt>, value: i32) {
+        cpp.set_prop(value);
+    }
+    
+    // this can work as our wrapper function, if necessary
+    pub fn add(cpp: Pin<&mut ffi::MyObjectQt>) {
+        cpp.add();
+    }
+    
 }
-*/
 
+/*
 impl ffi::MyObjectQt {
     pub fn set_prop(mut self: Pin<&mut Self>, value: i32) {
         unsafe {
@@ -76,32 +114,7 @@ impl ffi::MyObjectQt {
     // fn private_stuff(self: Pin<&mut Self>) -> &MyCustomRustType {
     //     unsafe { self.get_mut(). }
     // }
-}
-
-pub fn create_rs() -> Box<MyObject> {
-    Box::new(MyObject { prop: 42 })
-}
-
-pub fn set_prop(cpp: Pin<&mut ffi::MyObjectQt>, value: i32) {
-    cpp.set_prop(value);
-}
-
-// this can work as our wrapper function, if necessary
-pub fn add(cpp: Pin<&mut ffi::MyObjectQt>) {
-    cpp.add();
-}
+}*/
 
 //pub fn my_invokable(...) -> UniquePtr<QColor>
 
-pub struct MyObject {
-    prop: i32,
-}
-
-impl MyObject {
-    fn get_prop(self: &MyObject) -> i32 {
-        self.prop
-    }
-}
-
-// fn main() {
-// }
