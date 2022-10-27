@@ -1,18 +1,18 @@
+// where cxx_qt::QObject is a trait that links T to qobject::T
+trait Constructor<T> {
+    fn construct(args: T) -> Self;
+}
 struct MyStruct {
     x: i32,
+    y: String,
 }
-#[allow(non_snake_case)]
-mod QObject {
-    pub struct MyStruct {
-        pub y: i32,
+impl Constructor<(i32, String)> for MyStruct {
+    fn construct((num, string): (i32, String)) -> Self {
+        MyStruct { x: num, y: string }
     }
 }
 
 fn main() {
-    let my = MyStruct { x: 5 };
-
-    let other = QObject::MyStruct { y: 10 };
-
-    println!("MyStruct: {}", my.x);
-    println!("QObject::MyStruct: {}", other.y);
+    let my = <MyStruct as Constructor<(i32, String)>>::construct((5, "hello".to_owned()));
+    println!("MyStruct: {}, {}", my.x, my.y);
 }
