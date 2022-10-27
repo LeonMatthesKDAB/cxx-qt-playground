@@ -17,12 +17,12 @@ void MyObject::add()
     ::add(*this);
 }
 
-const MyObjectRust& MyObject::rust() const
+const MyObjectRust& MyObject::unsafe_rust() const
 {
     return *m_rust;
 }
 
-MyObjectRust& MyObject::rust_mut()
+MyObjectRust& MyObject::unsafe_rust_mut()
 {
     return *m_rust;
 }

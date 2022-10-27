@@ -27,7 +27,7 @@ mod ffi {
 
         std::unique_ptr<QColor> getter() {
         }
-        
+
         impl MyObject {
             fn get_string(&self) -> UniquePtr<QString> {
                 self.string.clone();
@@ -48,7 +48,7 @@ mod ffi {
                 let prop = self.as_ref().get_prop();
                 self.as_mut().set_prop(prop + 1);
             }
-    
+
             #[invokable]
             pub fn my_invokable(self: Pin<&mut Self>,
                 color: &QColor,

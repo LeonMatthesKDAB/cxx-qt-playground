@@ -9,6 +9,7 @@ mod ffi {
         private_stuff: MySpecialType,
     }
 
+    
     #[cxx_qt::signals(MyObject)]
     enum MySignals {
         Ready,
