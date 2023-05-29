@@ -1,77 +1,65 @@
-// defined in CXX-qt-lib
-/// 
-#[repr(transparent)]
-pub struct Value<T> {
-    value: UniquePtr<T>
-}
-
-impl From<UniquePtr<T>> for Value<T>
-{
-}
-
-impl Into<UniquePtr<T>> for Value<T>
-
 #[cxxqt::bridge]
-mod ffi {
+mod qobject {
     extern "Qt" {
-        struct MyObject {
-            #[prop]
-            prop: i32,
-            #[prop]
-            color: UniquePtr<QColor>
-            #[prop]
-            string: Value<QString>
-            // #[prop(read=pointer)]
-            // another_obj: UniquePtr<MyDataObject>
-        }
+        type QAbstractItemModel = cxx_qt_lib::QAbstractItemModel;
 
-        std::unique_ptr<QColor> getter() {
-        }
+        type QButton;
 
-        impl MyObject {
-            fn get_string(&self) -> UniquePtr<QString> {
-                self.string.clone();
-            }
+        type OtherObject = crate::qobject::OtherObject;
 
-            fn take_string()
-            fn give_string()
-        }
-
-        QString getter() {
-            return std::move(*rust->get_string()); // Return UniquePtr<QString>
-            return m_string;
-        }
-
-        impl MyObjectQt {
-            #[invokable]
-            pub fn add(self: Pin<&mut Self>) {
-                let prop = self.as_ref().get_prop();
-                self.as_mut().set_prop(prop + 1);
-            }
-
-            #[invokable]
-            pub fn my_invokable(self: Pin<&mut Self>,
-                color: &QColor,
-                color: Pin<&mut QColor>,
-                color: UnqiuePtr<QColor>) -> Value<QColor> {
-                let prop = self.as_ref().get_prop();
-                self.as_mut().set_prop(prop + 1);
-
-                return Value::from(QColorUnique);
-                return UniquePtr::new(QCOlorUnique).into()
-            }
-        }
+        #[qsignal]
+        fn clicked(self: &QButton);
     }
 
-    // CppToValue< UniquePtr< S > >  ... S become C++ type
-    QColor add(const QColor& color, QColor& color) {
-        static_assert!()
-        return std::move(*add().release());
+    extern "Rust" {
+        #[rust_name="MyObject"]
+        type MyObjectRust;
+    }
+    extern "RustQt" {
+        #[base="QAbstractItemModel"]
+        #[qml_element]
+        #[qproperty(i32, member="prop")] // needs to access field .prop
+        #[qproperty(i32, read="get_my_prop", write="set_my_prop")] //#[qproperty(i32, member="prop")]
+        #[qproperty(QString, read="get_my_prop", write="set_my_prop")] //#[qproperty(QString, member="prop")]
+        type MyObject = super::MyObject;
+
+        #[qinvokable]
+        fn my_invokable(self: Pin<&mut Self>, ..., *mut OtherObject) -> Result<()>;
+    
+       #[qsignal]
+       #[inherit]
+        fn data(self: Pin<&mut MyObject>, ...) -> ...;
+
+        #[cxx_name = "hasChildren"]
+        #[inherit]
+        fn has_children_super(self: &MyObject, parent: &QModelIndex) -> bool;
     }
 
-    // extern "C++" {
-    //     type MyObjectCpp;
+    impl cxx_qt::Constructor<(i32)> for MyObject {
+        todo!{}
+    }
 
-    //     fn my_thing(self: &MyObjectCpp) -> bool;
-    // }
+    impl cxx_qt::Threading for MyObject {}
+    // to disable CXXQt locking!
+    impl !cxx_qt::Locking for MyObject {}
+}
+
+struct MyObject {
+    pub prop: i32,
+
+    private_stuff: MySpecialType,
+}
+
+impl qobject::MyObject {
+    fn get_my_prop(&self) -> i32 {
+        todo!{}
+    }
+    
+    fn set_my_prop(self: Pin<&mut Self>, value: i32) {
+        todo!{}
+    }
+
+    pub fn my_invokable(self: core::pin::Pin<&mut Self>) ->  anyhow::Result<()> {
+        todo! { }
+    }
 }

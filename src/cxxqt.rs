@@ -1,40 +1,53 @@
 #[cxx_qt::bridge]
 mod ffi {
-    #[cxx_qt::qobject(base=QAbstractItemModel)]
-    #[cxx_qt::qobject]
+    extern "Qt" {
+        type QAbstractItemModel = cxx_qt_lib::QAbstractItemModel;
+
+        type OtherObject = crate::qobject::OtherObject;
+
+        type QButton;
+
+        #[qsignal]
+        fn clicked(self: &QButton);
+    }
+    
+    #[cxx_qt::qobject(base=QAbstractItemModel, qml_element)]
     struct MyObject {
-        #[qproperty]
+        #[qproperty(read="get_my_prop",write="set_my_prop")]
         prop: i32,
 
         private_stuff: MySpecialType,
     }
 
-    
-    #[cxx_qt::signals(MyObject)]
-    enum MySignals {
-        Ready,
-    }
+    impl qobject::MyObject {
+        #[qsignal]
+        #[inherit]
+        fn data(self: Pin<&mut Self>, my_thing: &MyType) {}
 
-    impl Default for MyObject {
-        Self {
-            prop: 42,
-            private_stuff: ...,
+        #[cxx_name = "hasChildren"]
+        #[inherit]
+        fn has_children_super(&self, parent: &QModelIndex) -> bool {}
+
+        fn get_my_prop(&self) -> i32 {
+            todo!{}
         }
-    }
 
-    impl cxx_qt<MyObject> {
+        fn set_my_prop(self: Pin<&mut Self>, value: i32) {
+            todo!{}
+        }
+
         #[invokable]
-        pub fn add(self: Pin<&mut Self>) {
-            let prop = self.as_ref().get_prop();
-            self.as_mut().set_prop(prop + 1);
-
-            self.as_ref().rust().thing()
+        #[return_cxx_type="Result<String>"]
+        pub fn my_invokable(self: Pin<&mut Self>) ->  anyhow::Result<()> {
+            todo! { }
         }
     }
 
-    impl MyObject {
-        fn thing(&self) {
-
-        }
+    impl cxx_qt::Constructor<(i32)> for qobject::MyObject {
+        todo!{}
     }
+
+    impl cxx_qt::Threading for MyObject {}
+    // to disable CXXQt locking!
+    impl !cxx_qt::Locking for MyObject {}
 }
