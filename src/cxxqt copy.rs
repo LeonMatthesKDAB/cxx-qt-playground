@@ -11,16 +11,12 @@ mod qobject {
         fn clicked(self: &QButton);
     }
 
-    extern "Rust" {
-        #[rust_name="MyObject"]
-        type MyObjectRust;
-    }
     extern "RustQt" {
         #[base="QAbstractItemModel"]
         #[qml_element]
-        #[qproperty(i32, member="prop")] // needs to access field .prop
-        #[qproperty(i32, read="get_my_prop", write="set_my_prop")] //#[qproperty(i32, member="prop")]
-        #[qproperty(QString, read="get_my_prop", write="set_my_prop")] //#[qproperty(QString, member="prop")]
+        #[qproperty(i32, prop)] // needs to access field .prop
+        #[qproperty(i32, prop, read=get_my_prop, write, notify)]
+        #[qproperty(QString, prop, read=get_my_prop, write=set_my_prop, notify=prop_changed)]
         type MyObject = super::MyObject;
 
         #[qinvokable]
@@ -41,7 +37,7 @@ mod qobject {
 
     impl cxx_qt::Threading for MyObject {}
     // to disable CXXQt locking!
-    impl !cxx_qt::Locking for MyObject {}
+    unsafe impl !cxx_qt::Locking for MyObject {}
 }
 
 struct MyObject {

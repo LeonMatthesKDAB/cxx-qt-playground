@@ -21,11 +21,10 @@ trait QtObject {
     }
 }
 
-trait CxxQtObject: QtObject {
+trait CxxQtType {
     type Inner;
-    
-    /// 
-    fn rust(&self) -> Self::Inner;
+
+    fn rust(&self) -> &Self::Inner;
     fn rust_mut(self: Pin<&mut self>) -> &mut Self::Inner;
 }
 

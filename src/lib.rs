@@ -1,11 +1,12 @@
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
-        #[rust_name="MyStruct"]
-        type MyStructRust;
+        fn test() -> ();
     }
 }
 
-struct MyStruct {
-    my_thing: i32
+use cxxqt_ffi::*;
+mod cxxqt_ffi {
+    pub fn test((x, y): (i32, i32)) {}
 }
+
