@@ -1,38 +1,27 @@
 #include "myobject.h"
 
-#include "lib.rs.h"
+#include "target/cxxbridge/playground/src/lib.rs.h"
 
-MyObject::MyObject(QObject* parent)
-    : QObject(parent)
-    , m_rust(create_rs())
-{
+template <>
+SignalHandler<struct test::ffi::MyClassMySignalParams *,
+              int>::~SignalHandler() {
+  if (data[0] == nullptr) {
+    return;
+  }
 
+  drop_signal_handler_my_class_my_signal(*this);
 }
 
-void MyObject::add()
-{
-    // mutex
-
-    // namespaced, myobject::internals::add(this)
-    ::add(*this);
+template <>
+void SignalHandler<struct test::ffi::MyClassMySignalParams *, int>::operator()(
+    int arg0) {
+  call_signal_handler_my_class_my_signal(*this, std::move(arg0));
 }
 
-const MyObjectRust& MyObject::unsafe_rust() const
-{
-    return *m_rust;
-}
-
-MyObjectRust& MyObject::unsafe_rust_mut()
-{
-    return *m_rust;
-}
-
-int MyObject::getProp() const
-{
-    return m_rust->get_prop();
-}
-
-void MyObject::setProp(int value)
-{
-    set_prop(*this, value);
+void test::ffi::connect_MyClass_mySignal(
+    const test::ffi::MyClass &obj,
+    test::ffi::SignalHandlerMyClassMySignal closure) {
+  std::cout << "Connecting" << std::endl;
+  obj.connect(std::move(closure));
+  std::cout << "Connected" << std::endl;
 }
