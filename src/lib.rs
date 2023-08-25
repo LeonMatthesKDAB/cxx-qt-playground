@@ -1,6 +1,6 @@
 use std::{ffi::*, pin::Pin};
 
-#[cxx::bridge(namespace = "test::ffi")]
+#[cxx::bridge(namespace = "my_library")]
 pub mod ffi {
     unsafe extern "C++" {
         include!("/home/kdab/Documents/projects/3371-Rust-RnD/playground/src/myobject.h");
@@ -14,10 +14,17 @@ pub mod ffi {
         type MyClass;
     }
 
+    #[qml_element]
+    qnamespace!("my_library::my_library");
+
+    #[qenum]
+    enum MyEnum {
+        A,
+        B,
+    }
+
     extern "Rust" {
-        unsafe fn drop_signal_handler_my_class_my_signal(
-            handler: SignalHandlerMyClassMySignal,
-        );
+        unsafe fn drop_signal_handler_my_class_my_signal(handler: SignalHandlerMyClassMySignal);
 
         fn call_signal_handler_my_class_my_signal(
             handler: &mut SignalHandlerMyClassMySignal,
@@ -66,7 +73,10 @@ pub struct SignalHandler<T: SignalHandlerParameters> {
 
 impl<T: SignalHandlerParameters> Drop for SignalHandler<T> {
     fn drop(&mut self) {
-        println!("Dropping SignalHandler of size: {size}", size=std::mem::size_of::<Self>());
+        println!(
+            "Dropping SignalHandler of size: {size}",
+            size = std::mem::size_of::<Self>()
+        );
     }
 }
 
