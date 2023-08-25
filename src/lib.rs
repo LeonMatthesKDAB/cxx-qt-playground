@@ -16,7 +16,7 @@ pub mod ffi {
 
     extern "Rust" {
         unsafe fn drop_signal_handler_my_class_my_signal(
-            handler: *mut SignalHandlerMyClassMySignal,
+            handler: SignalHandlerMyClassMySignal,
         );
 
         fn call_signal_handler_my_class_my_signal(
@@ -26,12 +26,7 @@ pub mod ffi {
     }
 }
 
-// specific to signal
-unsafe fn drop_signal_handler_my_class_my_signal(
-    handler: *mut SignalHandler<MyClassMySignalParams>,
-) {
-    drop(Box::from_raw(&mut unsafe { (*handler).closure } as *mut _))
-}
+use core::mem::drop as drop_signal_handler_my_class_my_signal;
 
 fn call_signal_handler_my_class_my_signal(
     handler: &mut SignalHandler<MyClassMySignalParams>,

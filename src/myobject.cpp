@@ -5,11 +5,11 @@
 template <>
 SignalHandler<struct test::ffi::MyClassMySignalParams *,
               int>::~SignalHandler() {
-  if (data[0] == nullptr) {
+  if (data[0] == nullptr && data[1] == nullptr) {
     return;
   }
 
-  drop_signal_handler_my_class_my_signal(*this);
+  drop_signal_handler_my_class_my_signal(std::move(*this));
 }
 
 template <>
