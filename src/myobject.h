@@ -3,11 +3,11 @@
 #include "rust/cxx.h"
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <type_traits>
 #include <utility>
-#include <iostream>
 
-template <typename CXXArguments, typename... Arguments> class SignalHandler {
+template <typename CXXArguments> class SignalHandler {
   void *data[2];
 
 public:
@@ -22,13 +22,12 @@ public:
   }
 
   ~SignalHandler() noexcept;
-  void operator()(Arguments... args);
+  template <typename... Arguments> void operator()(Arguments... args);
 };
 
 namespace rust {
-template <typename CXXArguments, typename... Arguments>
-struct IsRelocatable<SignalHandler<CXXArguments, Arguments...>>
-    : std::true_type {};
+template <typename CXXArguments>
+struct IsRelocatable<SignalHandler<CXXArguments>> : std::true_type {};
 } // namespace rust
 
 namespace test::ffi {
@@ -36,13 +35,13 @@ class MyClass {
 public:
   template <typename Functor> void connect(Functor functor) const {
     std::cout << "Calling" << std::endl;
-    functor(5);
+    functor.template operator()<int>(5);
     std::cout << "Called" << std::endl;
   }
 };
 
 using SignalHandlerMyClassMySignal =
-    SignalHandler<struct MyClassMySignalParams *, int>;
+    SignalHandler<struct MyClassMySignalParams *>;
 
 void connect_MyClass_mySignal(const MyClass &obj,
                               test::ffi::SignalHandlerMyClassMySignal closure);

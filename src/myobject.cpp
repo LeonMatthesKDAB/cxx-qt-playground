@@ -3,8 +3,7 @@
 #include "target/cxxbridge/playground/src/lib.rs.h"
 
 template <>
-SignalHandler<struct test::ffi::MyClassMySignalParams *,
-              int>::~SignalHandler() {
+SignalHandler<struct test::ffi::MyClassMySignalParams *>::~SignalHandler() {
   if (data[0] == nullptr && data[1] == nullptr) {
     return;
   }
@@ -13,7 +12,8 @@ SignalHandler<struct test::ffi::MyClassMySignalParams *,
 }
 
 template <>
-void SignalHandler<struct test::ffi::MyClassMySignalParams *, int>::operator()(
+template <>
+void SignalHandler<struct test::ffi::MyClassMySignalParams *>::operator()<int>(
     int arg0) {
   call_signal_handler_my_class_my_signal(*this, std::move(arg0));
 }

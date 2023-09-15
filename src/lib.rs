@@ -1,6 +1,6 @@
 use std::{ffi::*, pin::Pin};
 
-#[cxx::bridge(namespace = "my_library")]
+#[cxx::bridge(namespace = "test::ffi")]
 pub mod ffi {
     unsafe extern "C++" {
         include!("/home/kdab/Documents/projects/3371-Rust-RnD/playground/src/myobject.h");
@@ -9,18 +9,10 @@ pub mod ffi {
         #[cxx_name = "connect_MyClass_mySignal"]
         fn connect_my_class_my_signal(obj: &MyClass, signal_handler: SignalHandlerMyClassMySignal);
 
-        fn create_my_class() -> *mut MyClass;
+        #[cxx_name = "create_my_class"]
+        fn MyClass() -> *mut MyClass;
 
         type MyClass;
-    }
-
-    #[qml_element]
-    qnamespace!("my_library::my_library");
-
-    #[qenum]
-    enum MyEnum {
-        A,
-        B,
     }
 
     extern "Rust" {
