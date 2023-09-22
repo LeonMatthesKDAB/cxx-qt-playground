@@ -4,7 +4,7 @@ use std::{ffi::*, pin::Pin};
 pub mod ffi {
     unsafe extern "C++" {
         include!("/home/kdab/Documents/projects/3371-Rust-RnD/playground/src/myobject.h");
-        type SignalHandlerMyClassMySignal = super::SignalHandler<super::MyClassMySignalParams>;
+        type SignalHandlerMyClassMySignal = super::SignalHandler<super::MyClassMySignalClosure>;
 
         #[cxx_name = "connect_MyClass_mySignal"]
         fn connect_my_class_my_signal(obj: &MyClass, signal_handler: SignalHandlerMyClassMySignal);
@@ -20,7 +20,7 @@ pub mod ffi {
 
         fn call_signal_handler_my_class_my_signal(
             handler: &mut SignalHandlerMyClassMySignal,
-            arg0: i32,
+            arg0: &String,
         );
     }
 }
@@ -28,42 +28,42 @@ pub mod ffi {
 use core::mem::drop as drop_signal_handler_my_class_my_signal;
 
 fn call_signal_handler_my_class_my_signal(
-    handler: &mut SignalHandler<MyClassMySignalParams>,
-    arg0: i32,
+    handler: &mut SignalHandler<MyClassMySignalClosure>,
+    arg0: &String,
 ) {
-    (handler.closure)((arg0,));
+    (handler.closure)(arg0);
 }
 
-struct MyClassMySignalParams {}
+struct MyClassMySignalClosure {}
 
-impl SignalHandlerParameters for MyClassMySignalParams {
+impl SignalHandlerClosure for MyClassMySignalClosure {
     type Id = cxx::type_id!("test::ffi::SignalHandlerMyClassMySignal");
-    type Arguments = (i32,);
+    type FnType = dyn FnMut(&String);
 }
 
 impl ffi::MyClass {
-    pub fn on_my_signal<F: FnMut(i32) + 'static>(&self, mut closure: F) {
+    pub fn on_my_signal<F: FnMut(&String) + 'static>(&self, closure: F) {
         ffi::connect_my_class_my_signal(
             self,
             SignalHandler {
-                closure: Box::new(move |args| closure(args.0)),
+                closure: Box::new(closure),
             },
         );
     }
 }
 
 // shared code
-pub trait SignalHandlerParameters {
+pub trait SignalHandlerClosure {
     type Id;
-    type Arguments;
+    type FnType: ?Sized;
 }
 
 #[repr(transparent)]
-pub struct SignalHandler<T: SignalHandlerParameters> {
-    closure: Box<dyn FnMut(T::Arguments)>,
+pub struct SignalHandler<T: SignalHandlerClosure> {
+    closure: Box<T::FnType>,
 }
 
-impl<T: SignalHandlerParameters> Drop for SignalHandler<T> {
+impl<T: SignalHandlerClosure> Drop for SignalHandler<T> {
     fn drop(&mut self) {
         println!(
             "Dropping SignalHandler of size: {size}",
@@ -72,7 +72,7 @@ impl<T: SignalHandlerParameters> Drop for SignalHandler<T> {
     }
 }
 
-unsafe impl<T: SignalHandlerParameters> cxx::ExternType for SignalHandler<T> {
+unsafe impl<T: SignalHandlerClosure> cxx::ExternType for SignalHandler<T> {
     type Kind = cxx::kind::Trivial;
     type Id = T::Id;
 }

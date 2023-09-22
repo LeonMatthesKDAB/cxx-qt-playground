@@ -34,8 +34,9 @@ namespace test::ffi {
 class MyClass {
 public:
   template <typename Functor> void connect(Functor functor) const {
+    rust::String myString("world!");
     std::cout << "Calling" << std::endl;
-    functor.template operator()<int>(5);
+    functor.template operator()<const rust::String &>(myString);
     std::cout << "Called" << std::endl;
   }
 };

@@ -13,8 +13,8 @@ SignalHandler<struct test::ffi::MyClassMySignalParams *>::~SignalHandler() {
 
 template <>
 template <>
-void SignalHandler<struct test::ffi::MyClassMySignalParams *>::operator()<int>(
-    int arg0) {
+void SignalHandler<struct test::ffi::MyClassMySignalParams *>::operator()<
+    const rust::String &>(const rust::String &arg0) {
   call_signal_handler_my_class_my_signal(*this, std::move(arg0));
 }
 
